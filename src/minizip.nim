@@ -13,9 +13,9 @@ proc len*(zip: var Zip): int =
   return zip.c.addr.mz_zip_reader_get_num_files().int
 
 proc open*(zip: var Zip, path: string, mode:FileMode=fmRead): bool {.discardable.} =
+  #zip.c.m_pState = nil
   if mode == fmWrite:
-    var cpath = path.cstring
-    return zip.c.addr.mz_zip_writer_init_file(cpath, MZ_ZIP_FLAG_CASE_SENSITIVE.mz_uint) == 1
+    result = zip.c.addr.mz_zip_writer_init_file(path, 0.mz_uint) == 1
   elif mode == fmRead:
     return zip.c.addr.mz_zip_reader_init_file(path.cstring, 0) == 1
   else:

@@ -16,10 +16,10 @@ const
 
 type
   mz_file_read_func* = proc (pOpaque: pointer; file_ofs: mz_uint64; pBuf: pointer;
-                          n: csize): csize {.cdecl.}
+                          n: csize): csize
   mz_file_write_func* = proc (pOpaque: pointer; file_ofs: mz_uint64; pBuf: pointer;
-                           n: csize): csize {.cdecl.}
-  mz_file_needs_keepalive* = proc (pOpaque: pointer): mz_bool {.cdecl.}
+                           n: csize): csize
+  mz_file_needs_keepalive* = proc (pOpaque: pointer): mz_bool
   mz_zip_internal_state_tag* {.bycopy.} = object
 
   mz_zip_internal_state* = mz_zip_internal_state_tag
@@ -57,13 +57,14 @@ type
     MZ_ZIP_VALIDATION_FAILED, MZ_ZIP_WRITE_CALLBACK_FAILED, MZ_ZIP_TOTAL_ERRORS
 
 
+
 ##  Heap allocation callbacks.
 ## Note that mz_alloc_func parameter types purpsosely differ from zlib's: items/size is size_t, not unsigned long.
 
 type
-  mz_alloc_func* = proc (opaque: pointer; items: csize; size: csize): pointer
-  mz_free_func* = proc (opaque: pointer; address: pointer) {.cdecl.}
-  mz_realloc_func* = proc (opaque: pointer; address: pointer; items: csize; size: csize): pointer
+  mz_alloc_func* = proc (opaque: pointer; items: csize; size: csize): pointer #{.cdecl.}
+  mz_free_func* = proc (opaque: pointer; address: pointer) #{.cdecl.}
+  mz_realloc_func* = proc (opaque: pointer; address: pointer; items: csize; size: csize): pointer #{.cdecl.}
   mz_zip_archive* {.bycopy.} = object
     m_archive_size*: mz_uint64
     m_central_directory_file_ofs*: mz_uint64 ##  We only support up to UINT32_MAX files in zip64 mode.
