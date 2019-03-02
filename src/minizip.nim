@@ -15,7 +15,11 @@ proc len*(zip: var Zip): int =
 proc open*(zip: var Zip, path: string, mode:FileMode=fmRead): bool {.discardable.} =
   #zip.c.m_pState = nil
   if mode == fmWrite:
-    result = zip.c.addr.mz_zip_writer_init_file(path, MZ_ZIP_FLAG_WRITE_ZIP64.mz_uint) == 1
+    var err = zip.c.addr.mz_zip_writer_init_file(path, MZ_ZIP_FLAG_WRITE_ZIP64.mz_uint)
+    if err != 1:
+      stderr.write_line "minizip: error opening zip file " & $err
+      return false
+    return true
   elif mode == fmRead:
     return zip.c.addr.mz_zip_reader_init_file(path.cstring, 0) == 1
   else:
