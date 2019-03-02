@@ -15,14 +15,14 @@ const
   MZ_TRUE* = (1)
 
 type
-  mz_file_read_func* = proc (pOpaque: pointer; file_ofs: mz_uint64; pBuf: pointer;
-                          n: csize): csize
-  mz_file_write_func* = proc (pOpaque: pointer; file_ofs: mz_uint64; pBuf: pointer;
-                           n: csize): csize
-  mz_file_needs_keepalive* = proc (pOpaque: pointer): mz_bool
-  mz_zip_internal_state_tag* {.bycopy.} = object
+  #mz_file_read_func* = proc (pOpaque: pointer; file_ofs: mz_uint64; pBuf: pointer;
+  #                        n: csize): csize
+  #mz_file_write_func* = proc (pOpaque: pointer; file_ofs: mz_uint64; pBuf: pointer;
+  #                         n: csize): csize
+  #mz_file_needs_keepalive* = proc (pOpaque: pointer): mz_bool
+  #mz_zip_internal_state_tag* {.bycopy.} = object
 
-  mz_zip_internal_state* = mz_zip_internal_state_tag
+  #mz_zip_internal_state* = mz_zip_internal_state_tag
   mz_zip_mode* = enum
     MZ_ZIP_MODE_INVALID = 0, MZ_ZIP_MODE_READING = 1, MZ_ZIP_MODE_WRITING = 2,
     MZ_ZIP_MODE_WRITING_HAS_BEEN_FINALIZED = 3
@@ -62,10 +62,10 @@ type
 ## Note that mz_alloc_func parameter types purpsosely differ from zlib's: items/size is size_t, not unsigned long.
 
 type
-  mz_alloc_func* = proc (opaque: pointer; items: csize; size: csize): pointer #{.cdecl.}
-  mz_free_func* = proc (opaque: pointer; address: pointer) #{.cdecl.}
-  mz_realloc_func* = proc (opaque: pointer; address: pointer; items: csize; size: csize): pointer #{.cdecl.}
-  mz_zip_archive* {.bycopy.} = object
+  #mz_alloc_func* = proc (opaque: pointer; items: csize; size: csize): pointer {.cdecl.}
+  #mz_free_func* = proc (opaque: pointer; address: pointer) {.cdecl.}
+  #mz_realloc_func* = proc (opaque: pointer; address: pointer; items: csize; size: csize): pointer {.cdecl.}
+  mz_zip_archive* {.header:"../src/miniz.h", incompleteStruct.} = object
     m_archive_size*: mz_uint64
     m_central_directory_file_ofs*: mz_uint64 ##  We only support up to UINT32_MAX files in zip64 mode.
     m_total_files*: mz_uint32
@@ -73,15 +73,16 @@ type
     m_zip_type*: mz_zip_type
     m_last_error*: mz_zip_error
     m_file_offset_alignment*: mz_uint64
-    m_pAlloc*: mz_alloc_func
-    m_pFree*: mz_free_func
-    m_pRealloc*: mz_realloc_func
-    m_pAlloc_opaque*: pointer
-    m_pRead*: mz_file_read_func
-    m_pWrite*: mz_file_write_func
-    m_pNeeds_keepalive*: mz_file_needs_keepalive
-    m_pIO_opaque*: pointer
-    m_pState*: ptr mz_zip_internal_state
+    #m_pAlloc*: mz_alloc_func
+    #m_pFree*: mz_free_func
+    #m_pRealloc*: mz_realloc_func
+    #m_pAlloc_opaque*: pointer
+    #m_pRead*: mz_file_read_func
+    #m_pWrite*: mz_file_write_func
+    #m_pNeeds_keepalive*: mz_file_needs_keepalive
+    #m_pIO_opaque*: pointer
+    #m_pState*: ptr mz_zip_internal_state
+{.compile: "miniz.c".}
 
 proc mz_zip_get_error_string*(mz_err: mz_zip_error): cstring {.cdecl, importc.}
 proc mz_zip_get_last_error*(pZip: ptr mz_zip_archive): mz_zip_error {.cdecl, importc.}
@@ -103,17 +104,17 @@ proc mz_zip_reader_get_filename*(pZip: ptr mz_zip_archive; file_index: mz_uint;
     cdecl, importc.}
 proc mz_zip_reader_extract_to_file*(pZip: ptr mz_zip_archive; file_index: mz_uint;
                                    pDst_filename: cstring; flags: mz_uint): mz_bool {.
-    cdecl, importc.}
+    importc.}
 ##  Universal end function - calls either mz_zip_reader_end() or mz_zip_writer_end().
 
 proc mz_zip_writer_init_file*(pZip: ptr mz_zip_archive; pFilename: cstring;
                              size_to_reserve_at_beginning: mz_uint64): mz_bool {.
-    cdecl, importc.}
+    importc, cdecl.}
 ##  For archives opened using mz_zip_reader_init_file, pFilename must be the archive's filename so it can be reopened for writing. If the file can't be reopened, mz_zip_reader_end() will be called.
 
 proc mz_zip_writer_add_file*(pZip: ptr mz_zip_archive; pArchive_name: cstring;
                             pSrc_filename: cstring; pComment: pointer;
                             comment_size: mz_uint16; level_and_flags: mz_uint): mz_bool {.
-    cdecl, importc.}
-proc mz_zip_writer_finalize_archive*(pZip: ptr mz_zip_archive): mz_bool {.cdecl, importc.}
-proc mz_zip_writer_end*(pZip: ptr mz_zip_archive): mz_bool {.cdecl, importc.}
+    importc.}
+proc mz_zip_writer_finalize_archive*(pZip: ptr mz_zip_archive): mz_bool {.importc.}
+proc mz_zip_writer_end*(pZip: ptr mz_zip_archive): mz_bool {.importc.}

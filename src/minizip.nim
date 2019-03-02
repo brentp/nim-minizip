@@ -55,7 +55,7 @@ iterator pairs*(zip: var Zip): (int, string) =
     if zip.c.addr.mz_zip_reader_is_file_a_directory(i.mz_uint) == MZ_TRUE: continue
     yield (i, zip.get_file_name(i))
 
-proc extract_file*(zip: var Zip, path: string, destDir:string=""): string =
+proc extract_file*(zip: var Zip, path: string, destDir:string=""): string {.discardable.} =
   ## extract a single file at the given path from the zip archive and return the path to which it
   ## was extracted.
   var i = zip.c.addr.mz_zip_reader_locate_file(path, "", 0)
