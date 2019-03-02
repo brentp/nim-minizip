@@ -114,7 +114,9 @@
 
 
 
+#define MINIZ_HAS_64BIT_REGISTERS 1
 #define _LARGEFILE64_SOURCE 1
+#define FILE_OFFSET_BITS 64
 
 /* Defines to completely disable specific portions of miniz.c: 
    If all macros here are defined the only functionality remaining will be CRC-32, adler-32, tinfl, and tdefl. */
