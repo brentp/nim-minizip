@@ -5,6 +5,10 @@ import os
 type Zip* = object
   c : mz_zip_archive
 
+{.passC:"-D_FILE_OFFSET_BITS=64".}
+{.passC:"-D_LARGEFILE64_SOURCE=1".}
+{.passC:" -DMINIZ_HAS_64BIT_REGISTERS=1".}
+
 template check_mode(zip: Zip, mode: mz_zip_mode, operation: string) =
   if zip.c.addr.m_zip_mode != mode:
     raise newException(IOError, "must be opened in another mode to " & operation & " mode was:" & $zip.c.addr.m_zip_mode)
@@ -41,6 +45,8 @@ proc close*(zip: var Zip) =
     doAssert zip.c.addr.mz_zip_writer_end() == MZ_TRUE
   elif zip.c.addr.m_zip_mode == MZ_ZIP_MODE_READING:
     doAssert zip.c.addr.mz_zip_reader_end() == MZ_TRUE
+  else:
+    raise newException(IOError, "unknown mode:" & $zip.c.addr.m_zip_mode)
 
 proc get_file_name(zip: var Zip, i:int): string {.inline.} =
   var size = zip.c.addr.mz_zip_reader_get_filename(i.mz_uint, result, 0)
@@ -55,7 +61,7 @@ iterator pairs*(zip: var Zip): (int, string) =
     if zip.c.addr.mz_zip_reader_is_file_a_directory(i.mz_uint) == MZ_TRUE: continue
     yield (i, zip.get_file_name(i))
 
-proc extract_file*(zip: var Zip, path: string, destDir:string=""): string =
+proc extract_file*(zip: var Zip, path: string, destDir:string=""): string {.discardable.} =
   ## extract a single file at the given path from the zip archive and return the path to which it
   ## was extracted.
   var i = zip.c.addr.mz_zip_reader_locate_file(path, "", 0)
