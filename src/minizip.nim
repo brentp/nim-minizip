@@ -89,3 +89,34 @@ proc extract_file*(zip: var Zip, path: string, destDir:string=""): string {.disc
   result.parentDir.createDir()
   doAssert zip.c.addr.mz_zip_reader_extract_to_file(found_i.mz_uint, result, 0) == MZ_TRUE
   return result
+
+type MStream* {.pure, incompleteStruct.} = ref object
+  c: ptr mz_zip_reader_extract_iter_state
+
+proc destroy_mstream(m:MStream) =
+  if m.c != nil:
+    discard mz_zip_reader_extract_iter_free(m.c)
+
+proc getStream*(z: var Zip, path:string): MStream =
+  new(result, destroy_mstream)
+  result.c = mz_zip_reader_extract_file_iter_new(z.c.addr, path.cstring, 0)
+  doAssert result.c != nil
+
+proc readData*(s:MStream, buffer:pointer, bufLen:int): int {.inline.} =
+  result = s.c.mz_zip_reader_extract_iter_read(buffer, bufLen.csize)
+
+proc readAll*(m:MStream): string =
+  const s = 4194304
+  result = newString(s)
+  var off = 0
+  while true:
+    var L = m.readData(result[off].addr.pointer, s)
+    echo "L:", $L
+    off += L
+    if L < s:
+      break
+    result.setLen(result.len + s)
+  result.setLen(off)
+
+proc close*(m:MStream) =
+  destroy_mstream(m)

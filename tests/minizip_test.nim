@@ -52,5 +52,13 @@ suite "Zip Suite":
     check fileExists("ooo/bbb/ooo/B.txt")
 
     removeDir("ooo")
+
+
+    var st = zip.getStream("ooo/B.txt")
+    echo "ok"
+    check st.readAll == b_txt
+    echo "not ok"
+
+
     removeFile("testing.zip")
 

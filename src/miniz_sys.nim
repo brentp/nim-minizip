@@ -62,9 +62,9 @@ type
 ## Note that mz_alloc_func parameter types purpsosely differ from zlib's: items/size is size_t, not unsigned long.
 
 type
-  mz_alloc_func* = proc (opaque: pointer; items: csize; size: csize): pointer #{.cdecl.}
-  mz_free_func* = proc (opaque: pointer; address: pointer) #{.cdecl.}
-  mz_realloc_func* = proc (opaque: pointer; address: pointer; items: csize; size: csize): pointer #{.cdecl.}
+  mz_alloc_func* = proc (opaque: pointer; items: csize; size: csize): pointer {.cdecl.}
+  mz_free_func* = proc (opaque: pointer; address: pointer) {.cdecl.}
+  mz_realloc_func* = proc (opaque: pointer; address: pointer; items: csize; size: csize): pointer {.cdecl.}
   mz_zip_archive* {.bycopy.} = object
     m_archive_size*: mz_uint64
     m_central_directory_file_ofs*: mz_uint64 ##  We only support up to UINT32_MAX files in zip64 mode.
@@ -117,3 +117,19 @@ proc mz_zip_writer_add_file*(pZip: ptr mz_zip_archive; pArchive_name: cstring;
     cdecl, importc.}
 proc mz_zip_writer_finalize_archive*(pZip: ptr mz_zip_archive): mz_bool {.cdecl, importc.}
 proc mz_zip_writer_end*(pZip: ptr mz_zip_archive): mz_bool {.cdecl, importc.}
+
+
+type  mz_zip_reader_extract_iter_state* {.incompleteStruct, pure.} = object
+
+proc mz_zip_reader_extract_iter_new*(pZip: ptr mz_zip_archive; file_index: mz_uint;
+                                    flags: mz_uint): ptr mz_zip_reader_extract_iter_state {.importc,
+    cdecl.}
+
+proc mz_zip_reader_extract_file_iter_new*(pZip: ptr mz_zip_archive;
+    pFilename: cstring; flags: mz_uint): ptr mz_zip_reader_extract_iter_state {.importc,
+    cdecl.}
+proc mz_zip_reader_extract_iter_read*(pState: ptr mz_zip_reader_extract_iter_state;
+                                     pvBuf: pointer; buf_size: csize): csize {.importc,
+    cdecl.}
+proc mz_zip_reader_extract_iter_free*(pState: ptr mz_zip_reader_extract_iter_state): mz_bool {.importc,
+    cdecl.}
