@@ -37,7 +37,7 @@ proc add_file*(zip: var Zip, path: string, archivePath:string="") =
   var arcPath = path.cstring
   if archivePath != "":
     arcPath = archivePath.cstring
-  doAssert zip.c.addr.mz_zip_writer_add_file(archivePath, path.cstring, comment, 0, mz_uint(3'u8 or MZ_ZIP_FLAG_CASE_SENSITIVE.uint8 or MZ_ZIP_FLAG_WRITE_ZIP64.uint8)) == MZ_TRUE
+  doAssert zip.c.addr.mz_zip_writer_add_file(archivePath, path.cstring, comment, 0, mz_uint(3'u or MZ_ZIP_FLAG_CASE_SENSITIVE.uint or MZ_ZIP_FLAG_WRITE_ZIP64.uint)) == MZ_TRUE
 
 proc close*(zip: var Zip) =
   if zip.c.addr.m_zip_mode == MZ_ZIP_MODE_WRITING:
