@@ -117,3 +117,54 @@ proc mz_zip_writer_add_file*(pZip: ptr mz_zip_archive; pArchive_name: cstring;
     cdecl, importc.}
 proc mz_zip_writer_finalize_archive*(pZip: ptr mz_zip_archive): mz_bool {.cdecl, importc.}
 proc mz_zip_writer_end*(pZip: ptr mz_zip_archive): mz_bool {.cdecl, importc.}
+
+proc mz_zip_reader_extract_to_callback*(pZip: ptr mz_zip_archive;
+                                       file_index: mz_uint;
+                                       pCallback: mz_file_write_func;
+                                       pOpaque: pointer; flags: mz_uint): mz_bool {.cdecl, importc.}
+
+proc mz_zip_reader_extract_file_to_callback*(pZip: ptr mz_zip_archive;
+                                             pFilename: cstring;
+                                             pCallback: mz_file_write_func;
+                                             pOpaque: pointer; flags: mz_uint): csize {.cdecl, importc.}
+
+#mz_bool mz_zip_reader_extract_to_mem(mz_zip_archive *pZip, mz_uint file_index, void *pBuf, size_t buf_size, mz_uint flags);
+
+proc mz_zip_reader_extract_to_mem*(pZip: ptr mz_zip_archive; file_index: mz_uint;
+                                  pBuf: pointer,
+                                  pSize: ptr csize;
+                                  flags: mz_uint): mz_bool {.cdecl, importc.}
+
+const                         ##  Note: These enums can be reduced as needed to save memory or stack space - they are pretty conservative.
+  MZ_ZIP_MAX_IO_BUF_SIZE* = 64 * 1024
+  MZ_ZIP_MAX_ARCHIVE_FILENAME_SIZE* = 512
+  MZ_ZIP_MAX_ARCHIVE_FILE_COMMENT_SIZE* = 512
+
+type
+  mz_zip_archive_file_stat* {.bycopy.} = object
+    m_file_index*: mz_uint32   ##  Central directory file index.
+    ##  Byte offset of this entry in the archive's central directory. Note we currently only support up to UINT_MAX or less bytes in the central dir.
+    m_central_dir_ofs*: mz_uint64 ##  These fields are copied directly from the zip's central dir.
+    m_version_made_by*: mz_uint16
+    m_version_needed*: mz_uint16
+    m_bit_flag*: mz_uint16
+    m_method*: mz_uint16
+    m_time*: int         ##  CRC-32 of uncompressed data.
+    m_crc32*: mz_uint32        ##  File's compressed size.
+    m_comp_size*: mz_uint64    ##  File's uncompressed size. Note, I've seen some old archives where directory entries had 512 bytes for their uncompressed sizes, but when you try to unpack them you actually get 0 bytes.
+    m_uncomp_size*: mz_uint64  ##  Zip internal and external file attributes.
+    m_internal_attr*: mz_uint16
+    m_external_attr*: mz_uint32 ##  Entry's local header file offset in bytes.
+    m_local_header_ofs*: mz_uint64 ##  Size of comment in bytes.
+    m_comment_size*: mz_uint32 ##  MZ_TRUE if the entry appears to be a directory.
+    m_is_directory*: mz_bool   ##  MZ_TRUE if the entry uses encryption/strong encryption (which miniz_zip doesn't support)
+    m_is_encrypted*: mz_bool   ##  MZ_TRUE if the file is not encrypted, a patch file, and if it uses a compression method we support.
+    m_is_supported*: mz_bool ##  Filename. If string ends in '/' it's a subdirectory entry.
+                           ##  Guaranteed to be zero terminated, may be truncated to fit.
+    m_filename*: array[MZ_ZIP_MAX_ARCHIVE_FILENAME_SIZE, char] ##  Comment field.
+                                                            ##  Guaranteed to be zero terminated, may be truncated to fit.
+    m_comment*: array[MZ_ZIP_MAX_ARCHIVE_FILE_COMMENT_SIZE, char]
+
+
+proc mz_zip_reader_file_stat*(pZip: ptr mz_zip_archive; file_index: mz_uint;
+                             pStat: ptr mz_zip_archive_file_stat): mz_bool {.cdecl, importc.}
