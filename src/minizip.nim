@@ -69,6 +69,7 @@ proc extractInto*[T](zip: var Zip, path: string, values: var seq[T]) =
   var stat: mz_zip_archive_file_stat;
   doAssert MZ_TRUE == zip.c.addr.mz_zip_reader_file_stat(i.cuint, stat.addr)
   values.setLen(int(stat.m_uncomp_size.int / sizeof(T)))
+  echo "LEN:", values.len
   if values.len == 0: return
   var s = stat.m_uncomp_size.csize
   doAssert MZ_TRUE == zip.c.addr.mz_zip_reader_extract_to_mem(i.cuint, values[0].addr.pointer, s.addr, 0.cuint);
