@@ -1,20 +1,19 @@
-import ../src/minizip
+import ../minizip
 import unittest
 import os
 
 const a_txt = "hello A from a.txt\n"
 const b_txt = "hello B from b.txt\n"
 
-suite "Zip Suite":
-  test "that creating and a zip file works":
+proc make_zip() =
     var zip:Zip
-    check open(zip, "testing.zip", fmWrite)
+    doAssert open(zip, "testing.zip", fmWrite)
 
     var tmp:File
-    check open(tmp, "a.txt", fmWrite)
+    doAssert open(tmp, "a.txt", fmWrite)
     tmp.write(a_txt)
     tmp.close()
-    check open(tmp, "B.txt", fmWrite)
+    doAssert open(tmp, "B.txt", fmWrite)
     tmp.write(b_txt)
     tmp.close()
 
@@ -22,13 +21,18 @@ suite "Zip Suite":
     zip.add_file("a.txt", archivePath="ooo/a.txt")
     check zip.len == 1
     zip.add_file("B.txt", archivePath="ooo/B.txt")
-    check zip.len == 2
+    doAssert zip.len == 2
 
     removeFile("a.txt")
     removeFile("B.txt")
 
     zip.close()
 
+suite "Zip Suite":
+  test "that creating and a zip file works":
+    var zip:Zip
+
+    make_zip()
 
     check open(zip, "testing.zip", fmRead)
     check zip.len == 2
@@ -53,4 +57,19 @@ suite "Zip Suite":
 
     removeDir("ooo")
     removeFile("testing.zip")
+
+
+  test "that stream is ok":
+    var zip:Zip
+
+    make_zip()
+    check open(zip, "testing.zip", fmRead)
+    var s = zip.extractFileToMemory("ooo/a.txt")
+    check s == a_txt
+    echo "|" & a_txt & "|"
+    echo "|" & s & "|"
+
+
+
+
 

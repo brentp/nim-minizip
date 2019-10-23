@@ -1,4 +1,4 @@
-import ./miniz_sys
+import ./minizip/miniz_sys
 import strutils
 import strformat
 import os
@@ -8,6 +8,7 @@ type Zip* = object
 
 {.passC:"-D_FILE_OFFSET_BITS=64".}
 {.passC:"-D_LARGEFILE64_SOURCE=1".}
+{.passC:"-D__USE_LARGEFILE64."}
 {.passC:" -DMINIZ_HAS_64BIT_REGISTERS=1".}
 
 template check_mode(zip: Zip, mode: mz_zip_mode, operation: string) =
