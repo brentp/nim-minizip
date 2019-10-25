@@ -132,7 +132,7 @@ proc mz_zip_reader_extract_file_to_callback*(pZip: ptr mz_zip_archive;
 
 proc mz_zip_reader_extract_to_mem*(pZip: ptr mz_zip_archive; file_index: mz_uint;
                                   pBuf: pointer,
-                                  pSize: ptr csize;
+                                  bufSize: csize;
                                   flags: mz_uint): mz_bool {.cdecl, importc.}
 
 const                         ##  Note: These enums can be reduced as needed to save memory or stack space - they are pretty conservative.
@@ -149,7 +149,7 @@ type
     m_version_needed*: mz_uint16
     m_bit_flag*: mz_uint16
     m_method*: mz_uint16
-    m_time*: int         ##  CRC-32 of uncompressed data.
+    m_time*: mz_uint64        ##  CRC-32 of uncompressed data.
     m_crc32*: mz_uint32        ##  File's compressed size.
     m_comp_size*: mz_uint64    ##  File's uncompressed size. Note, I've seen some old archives where directory entries had 512 bytes for their uncompressed sizes, but when you try to unpack them you actually get 0 bytes.
     m_uncomp_size*: mz_uint64  ##  Zip internal and external file attributes.
@@ -167,4 +167,4 @@ type
 
 
 proc mz_zip_reader_file_stat*(pZip: ptr mz_zip_archive; file_index: mz_uint;
-                             pStat: ptr mz_zip_archive_file_stat): mz_bool {.cdecl, importc.}
+                             pStat: ptr mz_zip_archive_file_stat): mz_bool {.stdcall,importc.}

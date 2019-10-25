@@ -63,39 +63,6 @@ iterator pairs*(zip: var Zip): (int, string) =
     if zip.c.addr.mz_zip_reader_is_file_a_directory(i.mz_uint) == MZ_TRUE: continue
     yield (i, zip.get_file_name(i))
 
-proc extractInto*[T](zip: var Zip, path: string, values: var seq[T]) =
-  var i = zip.c.addr.mz_zip_reader_locate_file(path, "", 0)
-  if i == -1:
-    raise newException(KeyError, path & " not found in zip archive")
-  var stat: mz_zip_archive_file_stat;
-  doAssert MZ_TRUE == zip.c.addr.mz_zip_reader_file_stat(i.cuint, stat.addr)
-  echo "checking values:"
-  echo "len:", values.len
-  if values.len == 0:
-    values = newSeqUninitialized[T](int(stat.m_uncomp_size.int / sizeof(T)))
-  else:
-    values.setLen(int(stat.m_uncomp_size.int / sizeof(T)))
-  echo "LEN:", values.len
-  if values.len == 0: return
-  var s = stat.m_uncomp_size.csize
-  doAssert MZ_TRUE == zip.c.addr.mz_zip_reader_extract_to_mem(i.cuint, values[0].addr.pointer, s.addr, 0.cuint);
-  doAssert int(s.int / sizeof(T)) == values.len, "error in extractInto"
-
-proc extractFileToMemory*(zip: var Zip, path: string): string =
-  var i = zip.c.addr.mz_zip_reader_locate_file(path, "", 0)
-  if i == -1:
-    raise newException(KeyError, path & " not found in zip archive")
-
-  var stat: mz_zip_archive_file_stat;
-  doAssert MZ_TRUE == zip.c.addr.mz_zip_reader_file_stat(i.mz_uint, stat.addr)
-
-  result = newString(stat.m_uncomp_size)
-  if result.len == 0: return
-  # mz_bool mz_zip_reader_extract_to_mem(mz_zip_archive *pZip, mz_uint file_index, void *pBuf, size_t buf_size, mz_uint flags);
-  var s = result.len.csize
-  doAssert MZ_TRUE == zip.c.addr.mz_zip_reader_extract_to_mem(i.mz_uint, result[0].addr.pointer, s.addr, 0.mz_uint);
-  doAssert s == result.len.csize, "error in extracting to memory"
-
 proc extract_file*(zip: var Zip, path: string, destDir:string=""): string {.discardable.} =
   ## extract a single file at the given path from the zip archive and return the path to which it
   ## was extracted.
