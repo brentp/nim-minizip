@@ -109,6 +109,9 @@ proc mz_zip_reader_extract_to_file*(pZip: ptr mz_zip_archive; file_index: mz_uin
 proc mz_zip_writer_init_file*(pZip: ptr mz_zip_archive; pFilename: cstring;
                              size_to_reserve_at_beginning: mz_uint64): mz_bool {.
     cdecl, importc.}
+proc mz_zip_writer_init_file_v2*(pZip: ptr mz_zip_archive; pFilename: cstring;
+                             size_to_reserve_at_beginning: mz_uint64, flags: mz_uint): mz_bool {.
+    cdecl, importc.}
 ##  For archives opened using mz_zip_reader_init_file, pFilename must be the archive's filename so it can be reopened for writing. If the file can't be reopened, mz_zip_reader_end() will be called.
 
 proc mz_zip_writer_add_file*(pZip: ptr mz_zip_archive; pArchive_name: cstring;
