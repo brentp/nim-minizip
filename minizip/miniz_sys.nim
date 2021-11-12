@@ -23,10 +23,10 @@ type
   mz_zip_internal_state_tag* {.bycopy.} = object
 
   mz_zip_internal_state* = mz_zip_internal_state_tag
-  mz_zip_mode* = enum
+  mz_zip_mode* {.size: sizeof(cint).} = enum
     MZ_ZIP_MODE_INVALID = 0, MZ_ZIP_MODE_READING = 1, MZ_ZIP_MODE_WRITING = 2,
     MZ_ZIP_MODE_WRITING_HAS_BEEN_FINALIZED = 3
-  mz_zip_flags* = enum
+  mz_zip_flags* {.size: sizeof(cint).} = enum
     MZ_ZIP_FLAG_CASE_SENSITIVE = 0x00000100, MZ_ZIP_FLAG_IGNORE_PATH = 0x00000200,
     MZ_ZIP_FLAG_COMPRESSED_DATA = 0x00000400,
     MZ_ZIP_FLAG_DO_NOT_SORT_CENTRAL_DIRECTORY = 0x00000800, MZ_ZIP_FLAG_VALIDATE_LOCATE_FILE_FLAG = 0x00001000, ##  if enabled, mz_zip_reader_locate_file() will be called on each file as its validated to ensure the func finds the file in the central dir (intended for testing)
@@ -34,14 +34,14 @@ type
     MZ_ZIP_FLAG_WRITE_ZIP64 = 0x00004000, ##  always use the zip64 file format, instead of the original zip file format with automatic switch to zip64. Use as flags parameter with mz_zip_writer_init*_v2
     MZ_ZIP_FLAG_WRITE_ALLOW_READING = 0x00008000,
     MZ_ZIP_FLAG_ASCII_FILENAME = 0x00010000
-  mz_zip_type* = enum
+  mz_zip_type* {.size: sizeof(cint).} = enum
     MZ_ZIP_TYPE_INVALID = 0, MZ_ZIP_TYPE_USER, MZ_ZIP_TYPE_MEMORY, MZ_ZIP_TYPE_HEAP,
     MZ_ZIP_TYPE_FILE, MZ_ZIP_TYPE_CFILE, MZ_ZIP_TOTAL_TYPES
 
 ##  miniz error codes. Be sure to update mz_zip_get_error_string() if you add or modify this enum.
 
 type
-  mz_zip_error* = enum
+  mz_zip_error* {.size: sizeof(cint).} = enum
     MZ_ZIP_NO_ERROR = 0, MZ_ZIP_UNDEFINED_ERROR, MZ_ZIP_TOO_MANY_FILES,
     MZ_ZIP_FILE_TOO_LARGE, MZ_ZIP_UNSUPPORTED_METHOD,
     MZ_ZIP_UNSUPPORTED_ENCRYPTION, MZ_ZIP_UNSUPPORTED_FEATURE,
@@ -62,9 +62,10 @@ type
 ## Note that mz_alloc_func parameter types purpsosely differ from zlib's: items/size is size_t, not unsigned long.
 
 type
-  mz_alloc_func* = proc (opaque: pointer; items: csize; size: csize): pointer #{.cdecl.}
-  mz_free_func* = proc (opaque: pointer; address: pointer) #{.cdecl.}
-  mz_realloc_func* = proc (opaque: pointer; address: pointer; items: csize; size: csize): pointer #{.cdecl.}
+  mz_alloc_func* = pointer
+  mz_free_func* = pointer
+  mz_realloc_func* = pointer
+
   mz_zip_archive* {.bycopy.} = object
     m_archive_size*: mz_uint64
     m_central_directory_file_ofs*: mz_uint64 ##  We only support up to UINT32_MAX files in zip64 mode.
@@ -72,16 +73,18 @@ type
     m_zip_mode*: mz_zip_mode
     m_zip_type*: mz_zip_type
     m_last_error*: mz_zip_error
+
     m_file_offset_alignment*: mz_uint64
+
     m_pAlloc*: mz_alloc_func
     m_pFree*: mz_free_func
     m_pRealloc*: mz_realloc_func
     m_pAlloc_opaque*: pointer
-    m_pRead*: mz_file_read_func
-    m_pWrite*: mz_file_write_func
-    m_pNeeds_keepalive*: mz_file_needs_keepalive
+    m_pRead*: pointer # mz_file_read_func
+    m_pWrite*: pointer # mz_file_write_func
+    m_pNeeds_keepalive*: pointer # mz_file_needs_keepalive
     m_pIO_opaque*: pointer
-    m_pState*: ptr mz_zip_internal_state
+    m_pState*: pointer # ptr mz_zip_internal_state
 
 proc mz_zip_get_error_string*(mz_err: mz_zip_error): cstring {.cdecl, importc.}
 proc mz_zip_get_last_error*(pZip: ptr mz_zip_archive): mz_zip_error {.cdecl, importc.}
@@ -170,4 +173,17 @@ type
 
 
 proc mz_zip_reader_file_stat*(pZip: ptr mz_zip_archive; file_index: mz_uint;
-                             pStat: ptr mz_zip_archive_file_stat): mz_bool {.stdcall,importc.}
+                             pStat: ptr mz_zip_archive_file_stat): mz_bool {.cdecl,importc.}
+
+proc mz_zip_writer_add_mem*(pZip: ptr mz_zip_archive; pArchive_name: cstring;
+                           pBuf: pointer; buf_size: csize;
+                           level_and_flags: mz_uint): mz_bool {.cdecl,importc.}
+
+proc mz_zip_reader_extract_to_heap*(pZip: ptr mz_zip_archive; file_index: mz_uint;
+                                   pSize: ptr csize; flags: mz_uint): pointer {.cdecl,importc.}
+
+
+proc mz_zip_reader_extract_to_mem_no_alloc*(pZip: ptr mz_zip_archive;
+    file_index: mz_uint; pBuf: pointer; buf_size: csize; flags: mz_uint;
+    pUser_read_buf: pointer; user_read_buf_size: csize): mz_bool {.cdecl,importc.}
+

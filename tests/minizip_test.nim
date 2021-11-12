@@ -1,6 +1,8 @@
 import ../minizip
 import unittest
+import strformat
 import os
+import times
 
 const a_txt = "hello A from a.txt\n"
 const b_txt = "hello B from b.txt\n"
@@ -69,7 +71,71 @@ suite "Zip Suite":
     #echo "|" & a_txt & "|"
     #echo "|" & s & "|"
 
+  test "that buffer works":
+    var zip:Zip
+    doAssert open(zip, "testing.zip", fmWrite)
 
+    var data = "asdfasdfasdfasdfasdf asdf asd fas dfasd fasdf asdf asdfasdf asdf asdf asdf asdf asdf asdf asdf asdf asdf asdf "
+    data = data & data & data 
+    data = data & data & data 
+    data = data & data & data 
+    data = data & data & data 
+    data = data & data & data 
+    data = data & data & data 
+    data = data & data & data 
 
+    var x:pointer
+    var xlen = 0
+    var n = 2000
+
+    for i in 0..n:
+      var apath = &"zipped/{i}.txt"
+      doAssert zip.write_buffer(apath, data[0].addr.pointer, data.len, 1)
+
+    zip.close()
+    doAssert zip.open("testing.zip", fmRead)
+
+    block:
+
+      var s = newString(0)
+      var t = cpuTime()
+
+      for i in 0..n:
+        var apath = &"zipped/{i}.txt"
+        doAssert zip.read_buffer(apath, x.addr, xlen)
+        doAssert xlen == data.len
+        s.setLen(xlen)
+        copyMem(s[0].addr.pointer, x, xlen)
+
+        #doAssert s == data
+
+      free(x)
+      echo "buffer:", cpuTime() - t
+
+    block:
+      var t = cpuTime()
+      var str = newSeq[char]()
+      for i in 0..n:
+        var apath = &"zipped/{i}.txt"
+        doAssert zip.read_into(apath, str)
+
+        doAssert str.len == data.len
+        #doAssert str == data
+
+      echo "seq:", cpuTime() - t
+
+    block:
+      var t = cpuTime()
+      var str = newString(100)
+      for i in 0..n:
+        var apath = &"zipped/{i}.txt"
+        doAssert zip.read_into(apath, str)
+
+        doAssert str.len == data.len
+        #doAssert str == data
+
+      echo "string:", cpuTime() - t
+
+    zip.close()
 
 

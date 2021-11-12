@@ -41,6 +41,56 @@ proc add_file*(zip: var Zip, path: string, archivePath:string="") =
     arcPath = archivePath.cstring
   doAssert zip.c.addr.mz_zip_writer_add_file(archivePath, path.cstring, comment, 0, mz_uint(3'u or MZ_ZIP_FLAG_CASE_SENSITIVE.uint or MZ_ZIP_FLAG_WRITE_ZIP64.uint)) == MZ_TRUE
 
+proc write_buffer*(zip: var Zip, archivePath:string, buffer:pointer, buffer_len:uint32|int, compression_level:uint=0): bool =
+  check_mode(zip, MZ_ZIP_MODE_WRITING, "write_buffer")
+
+  #doAssert MZ_TRUE == zip.c.addr.mz_zip_writer_init_file(archivePath, 0);
+  return MZ_TRUE == zip.c.addr.mz_zip_writer_add_mem(archivePath.cstring, buffer, buffer_len.csize, mz_uint(compression_level))
+
+# user is responsible for freeing the buffer pointer.
+proc read_buffer*(zip: var Zip, archivePath:string, buffer:ptr pointer, buffer_len:var int): bool =
+  var i = zip.c.addr.mz_zip_reader_locate_file(archivePath, "", 0)
+  if i < 0: return false
+  var s:csize = 0;
+  buffer[] = zip.c.addr.mz_zip_reader_extract_to_heap(mz_uint(i), s.addr, 0)
+  buffer_len = s.int
+  return buffer_len >= 0
+
+proc read_into*[T](zip: var Zip, archivePath:string, values: var seq[T]): bool =
+  var i = zip.c.addr.mz_zip_reader_locate_file(archivePath, "", 0)
+  if i < 0: return false
+
+  var fs: mz_zip_archive_file_stat
+  if MZ_TRUE != zip.c.addr.mz_zip_reader_file_stat(mz_uint(i), fs.addr):
+    return false
+
+  var size_bytes = fs.m_uncomp_size.uint64 
+  values.setLen(int(int(size_bytes) / sizeof(T)))
+
+  return MZ_TRUE == zip.c.addr.mz_zip_reader_extract_to_mem(
+         mz_uint(i), values[0].addr, size_bytes.csize, mz_uint(MZ_ZIP_FLAG_WRITE_ZIP64));
+
+  #return MZ_TRUE == zip.c.addr.mz_zip_reader_extract_to_mem_no_alloc(mz_uint(i),
+  #  values[0].addr.pointer, size_bytes.csize, 0, nil, 0)
+
+proc read_into*(zip: var Zip, archivePath:string, values: var string): bool =
+  var i = zip.c.addr.mz_zip_reader_locate_file(archivePath, "", 0)
+  if i < 0: return false
+
+  var fs: mz_zip_archive_file_stat
+  if MZ_TRUE != zip.c.addr.mz_zip_reader_file_stat(mz_uint(i), fs.addr):
+    return false
+
+  var size_bytes = fs.m_uncomp_size
+  values.setLen(int(size_bytes))
+
+  return MZ_TRUE == zip.c.addr.mz_zip_reader_extract_to_mem(
+         mz_uint(i), values[0].addr, size_bytes.csize, mz_uint(MZ_ZIP_FLAG_WRITE_ZIP64));
+  #return MZ_TRUE == zip.c.addr.mz_zip_reader_extract_to_mem_no_alloc(mz_uint(i),
+  #  values[0].addr.pointer, size_bytes.csize, 0, nil, 0)
+
+proc free*(a1: pointer) {.cdecl, importc: "free", header: "<stdlib.h>".}
+
 proc close*(zip: var Zip) =
   if zip.c.addr.m_zip_mode == MZ_ZIP_MODE_WRITING:
     doAssert zip.c.addr.mz_zip_writer_finalize_archive() == MZ_TRUE
