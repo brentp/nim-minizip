@@ -45,13 +45,13 @@ proc write_buffer*(zip: var Zip, archivePath:string, buffer:pointer, buffer_len:
   check_mode(zip, MZ_ZIP_MODE_WRITING, "write_buffer")
 
   #doAssert MZ_TRUE == zip.c.addr.mz_zip_writer_init_file(archivePath, 0);
-  return MZ_TRUE == zip.c.addr.mz_zip_writer_add_mem(archivePath.cstring, buffer, buffer_len.csize, mz_uint(compression_level))
+  return MZ_TRUE == zip.c.addr.mz_zip_writer_add_mem(archivePath.cstring, buffer, buffer_len.csize_t, mz_uint(compression_level))
 
 # user is responsible for freeing the buffer pointer.
 proc read_buffer*(zip: var Zip, archivePath:string, buffer:ptr pointer, buffer_len:var int): bool =
   var i = zip.c.addr.mz_zip_reader_locate_file(archivePath, "", 0)
   if i < 0: return false
-  var s:csize = 0;
+  var s:csize_t = 0;
   buffer[] = zip.c.addr.mz_zip_reader_extract_to_heap(mz_uint(i), s.addr, 0)
   buffer_len = s.int
   return buffer_len >= 0
@@ -69,7 +69,7 @@ proc read_into*[T](zip: var Zip, archivePath:string, values: var seq[T]): bool =
   if values.len == 0: return true
 
   return MZ_TRUE == zip.c.addr.mz_zip_reader_extract_to_mem(
-         mz_uint(i), values[0].addr, size_bytes.csize, mz_uint(MZ_ZIP_FLAG_WRITE_ZIP64));
+         mz_uint(i), values[0].addr, size_bytes.csize_t, mz_uint(MZ_ZIP_FLAG_WRITE_ZIP64));
 
   #return MZ_TRUE == zip.c.addr.mz_zip_reader_extract_to_mem_no_alloc(mz_uint(i),
   #  values[0].addr.pointer, size_bytes.csize, 0, nil, 0)
@@ -87,7 +87,7 @@ proc read_into*(zip: var Zip, archivePath:string, values: var string): bool =
   if values.len == 0: return true
 
   return MZ_TRUE == zip.c.addr.mz_zip_reader_extract_to_mem(
-         mz_uint(i), values[0].addr, size_bytes.csize, mz_uint(MZ_ZIP_FLAG_WRITE_ZIP64));
+         mz_uint(i), values[0].addr, size_bytes.csize_t, mz_uint(MZ_ZIP_FLAG_WRITE_ZIP64));
   #return MZ_TRUE == zip.c.addr.mz_zip_reader_extract_to_mem_no_alloc(mz_uint(i),
   #  values[0].addr.pointer, size_bytes.csize, 0, nil, 0)
 

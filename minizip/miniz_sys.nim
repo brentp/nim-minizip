@@ -1,7 +1,7 @@
 {.compile: "miniz.c".}
 
 type
-  mz_uint8* = cuchar
+  mz_uint8* = char
   mz_int16* = cshort
   mz_uint16* = cushort
   mz_uint32* = cuint
@@ -16,9 +16,9 @@ const
 
 type
   mz_file_read_func* = proc (pOpaque: pointer; file_ofs: mz_uint64; pBuf: pointer;
-                          n: csize): csize
+                          n: csize_t): csize_t
   mz_file_write_func* = proc (pOpaque: pointer; file_ofs: mz_uint64; pBuf: pointer;
-                           n: csize): csize
+                           n: csize_t): csize_t
   mz_file_needs_keepalive* = proc (pOpaque: pointer): mz_bool
   mz_zip_internal_state_tag* {.bycopy.} = object
 
@@ -132,13 +132,13 @@ proc mz_zip_reader_extract_to_callback*(pZip: ptr mz_zip_archive;
 proc mz_zip_reader_extract_file_to_callback*(pZip: ptr mz_zip_archive;
                                              pFilename: cstring;
                                              pCallback: mz_file_write_func;
-                                             pOpaque: pointer; flags: mz_uint): csize {.cdecl, importc.}
+                                             pOpaque: pointer; flags: mz_uint): csize_t {.cdecl, importc.}
 
 #mz_bool mz_zip_reader_extract_to_mem(mz_zip_archive *pZip, mz_uint file_index, void *pBuf, size_t buf_size, mz_uint flags);
 
 proc mz_zip_reader_extract_to_mem*(pZip: ptr mz_zip_archive; file_index: mz_uint;
                                   pBuf: pointer,
-                                  bufSize: csize;
+                                  bufSize: csize_t;
                                   flags: mz_uint): mz_bool {.cdecl, importc.}
 
 const                         ##  Note: These enums can be reduced as needed to save memory or stack space - they are pretty conservative.
@@ -176,14 +176,14 @@ proc mz_zip_reader_file_stat*(pZip: ptr mz_zip_archive; file_index: mz_uint;
                              pStat: ptr mz_zip_archive_file_stat): mz_bool {.cdecl,importc.}
 
 proc mz_zip_writer_add_mem*(pZip: ptr mz_zip_archive; pArchive_name: cstring;
-                           pBuf: pointer; buf_size: csize;
+                           pBuf: pointer; buf_size: csize_t;
                            level_and_flags: mz_uint): mz_bool {.cdecl,importc.}
 
 proc mz_zip_reader_extract_to_heap*(pZip: ptr mz_zip_archive; file_index: mz_uint;
-                                   pSize: ptr csize; flags: mz_uint): pointer {.cdecl,importc.}
+                                   pSize: ptr csize_t; flags: mz_uint): pointer {.cdecl,importc.}
 
 
 proc mz_zip_reader_extract_to_mem_no_alloc*(pZip: ptr mz_zip_archive;
-    file_index: mz_uint; pBuf: pointer; buf_size: csize; flags: mz_uint;
-    pUser_read_buf: pointer; user_read_buf_size: csize): mz_bool {.cdecl,importc.}
+    file_index: mz_uint; pBuf: pointer; buf_size: csize_t; flags: mz_uint;
+    pUser_read_buf: pointer; user_read_buf_size: csize_t): mz_bool {.cdecl,importc.}
 
