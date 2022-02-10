@@ -3100,7 +3100,7 @@ static int mz_stat64(const char *path, struct __stat64 *buffer)
 #define MZ_FFLUSH fflush
 #define MZ_FREOPEN(f, m, s) freopen(f, m, s)
 #define MZ_DELETE_FILE remove
-#elif defined(__USE_LARGEFILE64) /* gcc, clang */
+#elif defined(__USE_LARGEFILE64) && !defined(__APPLE__) /* gcc, clang */
 #ifndef MINIZ_NO_TIME
 #include <utime.h>
 #endif
