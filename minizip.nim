@@ -65,7 +65,7 @@ proc read_into*[T](zip: var Zip, archivePath:string, values: var seq[T]): bool =
     return false
 
   var size_bytes = fs.m_uncomp_size.uint64 
-  values.setLen(int(int(size_bytes) / sizeof(T)))
+  values.setLen(uint64(int(size_bytes) / sizeof(T)))
   if values.len == 0: return true
 
   return MZ_TRUE == zip.c.addr.mz_zip_reader_extract_to_mem(
@@ -83,7 +83,7 @@ proc read_into*(zip: var Zip, archivePath:string, values: var string): bool =
     return false
 
   var size_bytes = fs.m_uncomp_size
-  values.setLen(int(size_bytes))
+  values.setLen(size_bytes)
   if values.len == 0: return true
 
   return MZ_TRUE == zip.c.addr.mz_zip_reader_extract_to_mem(
