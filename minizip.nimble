@@ -1,5 +1,5 @@
 # Package
-version       = "0.0.9"
+version       = "0.0.11"
 author        = "Brent Pedersen"
 description   = "nim wrapper for miniz for zip functions"
 license       = "MIT"
