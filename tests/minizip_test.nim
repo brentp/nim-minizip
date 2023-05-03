@@ -83,6 +83,8 @@ suite "Zip Suite":
     data = data & data & data 
     data = data & data & data 
     data = data & data & data 
+    var udata = newSeq[uint32](8192)
+    for i in 0..<udata.len: udata[i] = (2 * i).uint32
 
     var x:pointer
     var xlen = 0
@@ -91,6 +93,8 @@ suite "Zip Suite":
     for i in 0..n:
       var apath = &"zipped/{i}.txt"
       doAssert zip.write_buffer(apath, data[0].addr.pointer, data.len, 1)
+      var upath = &"zipped/uint{i}.txt"
+      doAssert zip.write_buffer(upath, udata[0].addr.pointer, udata.len * sizeof(udata[0]), 1)
 
     zip.close()
     doAssert zip.open("testing.zip", fmRead)
@@ -126,6 +130,19 @@ suite "Zip Suite":
 
     block:
       var t = cpuTime()
+      var u = newSeq[uint32]()
+      for i in 0..n:
+        u.setLen(999999)
+        var apath = &"zipped/uint{i}.txt"
+        doAssert zip.read_into(apath, u)
+
+        doAssert u == udata
+        #doAssert str == data
+
+      echo "uint seq:", cpuTime() - t
+
+    block:
+      var t = cpuTime()
       var str = newString(100)
       for i in 0..n:
         var apath = &"zipped/{i}.txt"
@@ -137,5 +154,6 @@ suite "Zip Suite":
       echo "string:", cpuTime() - t
 
     zip.close()
+
 
 
